@@ -84,11 +84,11 @@ def build_email(to_name: str, to_email: str) -> MIMEMultipart:
     
     related.attach(alt)
 
-    logo_path = Path("Image/unicornLogo.jpeg")
+    logo_path = Path("image/logo.jpeg")
     if logo_path.exists():
         with open(logo_path, "rb") as f:
             img = MIMEImage(f.read())
-            img.add_header("Content-ID", "<unicorn_logo>")
+            img.add_header("Content-ID", "<MBlogo>")
             img.add_header("Content-Disposition", "inline", filename=logo_path.name)
             related.attach(img)
     else:
