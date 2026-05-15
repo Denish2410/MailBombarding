@@ -26,29 +26,25 @@ SHEET_NAME      = 0
 FIRST_NAME_COL  = "First Name"
 EMAIL_COL       = "Work Email"
 
-PDF_ATTACHMENT  = None          # Set to "brochure.pdf" to attach a PDF, or leave None
+PDF_ATTACHMENT  = None          
 
-DELAY_SECONDS   = 5        # Base seconds between emails (random ±3s added automatically)
-
+DELAY_SECONDS   = 5        
 # =============================================================
 #  ✏️  EMAIL CONTENT
 # =============================================================
 
 EMAIL_SUBJECT = "Your subject here..."
 
-# Plain-text fallback (for email clients that don't render HTML)
+
 EMAIL_BODY_PLAIN = """\
 Your body message here....
 """
 
-# HTML version — renders styled signature exactly like your Gmail signature
 EMAIL_BODY_HTML = """\
 Your body HTML here....
 """
 
-# =============================================================
-#  🚀  SCRIPT — No need to edit below this line
-# =============================================================
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,17 +74,16 @@ def load_contacts(filepath: str, sheet) -> pd.DataFrame:
 def build_email(to_name: str, to_email: str) -> MIMEMultipart:
     """Construct a personalized MIME email with plain+HTML and optional PDF attachment."""
 
-    # Use 'related' envelope to support inline images
+ 
     related = MIMEMultipart("related")
 
-    # 'alternative' tells clients: pick the best version you support (HTML preferred)
+    
     alt = MIMEMultipart("alternative")
     alt.attach(MIMEText(EMAIL_BODY_PLAIN.format(**{"First Name": to_name}), "plain", "utf-8"))
     alt.attach(MIMEText(EMAIL_BODY_HTML.format(**{"First Name": to_name}),  "html",  "utf-8"))
     
     related.attach(alt)
 
-    # Attach the inline logo image
     logo_path = Path("Image/unicornLogo.jpeg")
     if logo_path.exists():
         with open(logo_path, "rb") as f:
@@ -99,7 +94,7 @@ def build_email(to_name: str, to_email: str) -> MIMEMultipart:
     else:
         log.warning(f"Logo not found at '{logo_path}'. Cannot attach inline image.")
 
-    # If PDF attached, wrap in a 'mixed' envelope
+    
     if PDF_ATTACHMENT:
         pdf_path = Path(PDF_ATTACHMENT)
         if pdf_path.exists():
@@ -116,7 +111,7 @@ def build_email(to_name: str, to_email: str) -> MIMEMultipart:
         else:
             log.warning(f"PDF not found at '{PDF_ATTACHMENT}' — sending without attachment")
 
-    # No PDF — just use the related envelope
+    
     related["From"]    = GMAIL_ADDRESS
     related["To"]      = to_email
     related["Subject"] = EMAIL_SUBJECT
@@ -153,7 +148,7 @@ def send_emails():
         name  = row[FIRST_NAME_COL]
         email = row[EMAIL_COL]
 
-        # Basic email format validation
+        
         if "@" not in email or "." not in email.split("@")[-1]:
             log.warning(f"[{idx+1}] Skipped invalid email: {email}")
             skipped_count += 1
@@ -168,10 +163,10 @@ def send_emails():
             log.error(f"[{idx+1}/{len(df)}] ✗ Failed for {name} <{email}>: {e}")
             failed_count += 1
 
-        # Random delay — mimics human behaviour, avoids spam detection
+        
         if idx < len(df) - 1:
             delay = DELAY_SECONDS + random.uniform(-3, 3)
-            delay = max(3, delay)       # never go below 3 seconds
+            delay = max(3, delay)       
             time.sleep(delay)
 
     server.quit()
