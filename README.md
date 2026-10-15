@@ -1,202 +1,143 @@
-================================================================
-  MAILBOMBARDING (BULK EMAIL SENDER) — README
-================================================================
+<div align="center">
 
-WHAT THIS DOES
---------------
-Reads a list of contacts from an Excel file and sends each one
-a personalized HTML email via Gmail SMTP. 
-It supports:
-  - Personalized salutations (First Name)
-  - Inline logo image (Image)
-  - Optional PDF attachment
-  - Randomized delay between sends to avoid spam filters
-  - Full logging to email_log.txt
+# MailBombarding
 
+**A simple, personalised bulk email sender for Gmail.**
 
-================================================================
-  FOLDER STRUCTURE
-================================================================
+Read contacts from an Excel sheet, personalise each message, add an inline logo and an optional PDF, and send with randomised pacing to keep things friendly to spam filters.
 
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Gmail SMTP](https://img.shields.io/badge/Gmail-SMTP-EA4335?logo=gmail&logoColor=white)](https://support.google.com/mail/answer/7126229)
+[![Status](https://img.shields.io/badge/status-ready%20to%20use-brightgreen)](#)
+
+</div>
+
+---
+
+## Features
+
+- **Personalised greetings** using a `{First Name}` placeholder in plain-text and HTML bodies
+- **Inline logo** embedded directly in the HTML email
+- **Optional PDF attachment** sent with every message
+- **Randomised delays** between sends to reduce spam-filter risk
+- **Full logging** of every send to `email_log.txt`
+- **Skips incomplete rows** automatically (missing name or email)
+
+## Project Structure
+
+```text
 your-project/
-│
-├── bulk_email_sender.py      ← main script
-├── .env                      ← Gmail credentials (you create this)
-├── testing.xlsx              ← contacts spreadsheet
-├── email_log.txt             ← auto-generated after first run
-│
+├── bulk_email_sender.py   # main script
+├── .env                   # Gmail credentials (you create this)
+├── testing.xlsx           # contacts spreadsheet
+├── email_log.txt          # generated after the first run
 ├── Image/
-│   └── your image      ← inline logo used in emails
-│
-└── (optional) your_file.pdf  ← if you want a PDF attachment
+│   └── your-logo.jpeg     # inline logo used in emails
+└── your_file.pdf          # optional attachment
+```
 
+## Requirements
 
-================================================================
-  REQUIREMENTS
-================================================================
+- Python **3.8** or newer
+- The following packages:
 
-Python 3.8 or higher
+```bash
+pip install pandas openpyxl python-dotenv
+```
 
-Required Python packages:
-  - pandas
-  - openpyxl      (for reading .xlsx files)
-  - python-dotenv
+## Quick Start
 
-Install them all at once by running:
+### 1. Create your `.env` file
 
-    pip install pandas openpyxl python-dotenv
+In the same folder as `bulk_email_sender.py`, create a file named exactly `.env`:
 
+```env
+GMAIL_ADDRESS=you@gmail.com
+GMAIL_APP_PASS=xxxx xxxx xxxx xxxx
+```
 
-================================================================
-  SETUP — STEP BY STEP
-================================================================
+> **Important:** `GMAIL_APP_PASS` must be a 16-character **App Password**, not your normal Gmail password. See [Getting a Gmail App Password](#getting-a-gmail-app-password).
 
-STEP 1 — Create your .env file
---------------------------------
-In the same folder as bulk_email_sender.py,
- create a file named exactly:   .env
+### 2. Prepare your contacts spreadsheet
 
-Paste this inside it (replace with your real values):
+Save `testing.xlsx` in the project folder with at least these two columns (names are case-sensitive):
 
-    GMAIL_ADDRESS=you@gmail.com
-    GMAIL_APP_PASS=xxxx xxxx xxxx xxxx
+| First Name | Work Email         |
+|------------|--------------------|
+| Alice      | alice@example.com  |
+| Bob        | bob@company.org    |
 
-  ⚠  GMAIL_APP_PASS is a 16-character App Password, NOT your
-     normal Gmail password. See "Getting a Gmail App Password"
-     section below.
+Rows with a missing name or email are skipped.
 
+### 3. Add your logo *(optional)*
 
-STEP 2 — Prepare your Excel file (testing.xlsx)
--------------------------------------------------
-The spreadsheet must have at least these two columns
-(column names are case-sensitive):
+Create an `Image/` folder and place your logo inside it. If the logo is missing, the script will warn you and still send the emails without the image.
 
-    | First Name | Work Email          |
-    |------------|---------------------|
-    | Alice      | alice@example.com   |
-    | Bob        | bob@company.org     |
+### 4. Write your email
 
-  - Save it as testing.xlsx in the project folder.
-  - Rows with a missing name or email are skipped automatically.
+Open `bulk_email_sender.py` and edit the settings near the top:
 
+```python
+EMAIL_SUBJECT   = "Your subject here"
+EMAIL_BODY_PLAIN = "Hi {First Name}, here is the plain-text version of my message."
+EMAIL_BODY_HTML  = "<p>Hi {First Name}, here is the <strong>HTML</strong> version.</p>"
+```
 
-STEP 3 — Add your logo
-------------------------
-Create a folder called Image/ inside the project folder and
-place your logo file there:
+### 5. Attach a PDF *(optional)*
 
-    Image
+```python
+PDF_ATTACHMENT = "your_file.pdf"   # set to None to send without an attachment
+```
 
-If the file is missing the script will warn you but still send
-the emails (just without the inline image).
+### 6. Set the send delay
 
+```python
+DELAY_SECONDS = 5   # base pause between emails; actual delay is randomised ±3 s (minimum 3 s)
+```
 
-STEP 4 — Edit the email content
----------------------------------
-Open bulk_email_sender.py and fill in these sections near the
-top of the file:
+Increase this value if you are sending to many contacts.
 
-    EMAIL_SUBJECT    = "Your subject here..."
-    EMAIL_BODY_PLAIN = "Plain-text version of your message"
-    EMAIL_BODY_HTML  = "<p>HTML version of your message</p>"
+## Running the Script
 
-You can personalise with {First Name} anywhere in the body:
+From the project folder, run:
 
-    EMAIL_BODY_PLAIN = "Hi {First Name}, ..."
+```bash
+python bulk_email_sender.py
+```
 
+The script will connect to Gmail SMTP, read your contacts, send each personalised email, print a live status line for every send, and write a full log to `email_log.txt`.
 
-STEP 5 — (Optional) Attach a PDF
-----------------------------------
-If you want to attach a PDF to every email, set:
+## Getting a Gmail App Password
 
-    PDF_ATTACHMENT = "your_file.pdf"
+Google requires an App Password when 2-Step Verification is enabled, which it must be for App Passwords to work.
 
-Leave it as  None  to send without any attachment.
+1. Go to [myaccount.google.com/security](https://myaccount.google.com/security) and turn on **2-Step Verification** if it is not already on.
+2. Visit [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+3. Choose **App: Mail** and **Device: Other**, then give it a name.
+4. Click **Generate** and copy the 16-character password.
+5. Paste it into your `.env` file (with or without spaces).
 
+## Troubleshooting
 
-STEP 6 — Adjust the send delay
---------------------------------
-DELAY_SECONDS controls the base pause between emails.
-Default is 5 seconds (actual delay is randomised ±3 s,
-minimum 3 s). Increase this if you are sending many emails
-to reduce spam-filter risk.
+| Problem | Fix |
+|---------|-----|
+| **Authentication failed** | Check `GMAIL_ADDRESS` and `GMAIL_APP_PASS` in `.env`. Make sure 2-Step Verification is on, and regenerate the App Password if needed. |
+| **Excel file not found** | Confirm `testing.xlsx` is in the same folder as the script, or update `EXCEL_FILE` at the top of the script. |
+| **Logo not found** | The folder must be named exactly `Image/` and the file name must match the one the script expects, including case. |
+| **Emails going to spam** | Increase `DELAY_SECONDS` (try 10–15), warm up the account with a few manual emails, and avoid spam-trigger words. |
+| **KeyError on `{First Name}`** | A placeholder in your body does not match `First Name` exactly. Check spelling and capitalisation. |
 
-    DELAY_SECONDS = 5
+## Important Notes
 
-
-================================================================
-  HOW TO RUN
-================================================================
-
-Open a terminal, navigate to the project folder, then run:
-
-    python bulk_email_sender.py
-
-The script will:
-  1. Connect to Gmail SMTP
-  2. Read contacts from testing.xlsx
-  3. Send each contact a personalised email
-  4. Print a live status line for every send
-  5. Write a full log to email_log.txt
-
-
-================================================================
-  GETTING A GMAIL APP PASSWORD
-================================================================
-
-Google requires an App Password when 2-Step Verification is on
-(which it must be for App Passwords to work).
-
-  1. Go to  https://myaccount.google.com/security
-  2. Under "How you sign in to Google", click 2-Step Verification
-     and enable it if not already on.
-  3. Go back to Security → search for "App passwords"
-     (or visit https://myaccount.google.com/apppasswords)
-  4. Choose App: Mail  |  Device: Other → give it a name
-  5. Click Generate — copy the 16-character password shown.
-  6. Paste it (with or without spaces) into your .env file.
-
-  ⚠  Never share your App Password or commit .env to Git.
-     Add .env to your .gitignore file.
-
-
-================================================================
-  TROUBLESHOOTING
-================================================================
-
-"Authentication failed"
-  → Double-check GMAIL_ADDRESS and GMAIL_APP_PASS in .env.
-  → Make sure 2-Step Verification is ON in your Google account.
-  → Re-generate the App Password and update .env.
-
-"Excel file not found"
-  → Confirm testing.xlsx is in the same folder as the script.
-  → Check the EXCEL_FILE variable at the top of the script.
-
-"Logo not found"
-  → Make sure the folder is named exactly  Image/  (capital I)
-    and the file is  yourimage.jpeg  (matching case).
-
-Emails going to spam
-  → Increase DELAY_SECONDS (try 10–15).
-  → Warm up your Gmail account by sending a few manual emails first.
-  → Avoid spam trigger words in your subject/body.
-
-KeyError on {First Name}
-  → Your EMAIL_BODY_PLAIN or EMAIL_BODY_HTML contains a curly-
-    brace placeholder that doesn't match "First Name" exactly.
-  → Check spelling and capitalisation.
-
-
-================================================================
-  IMPORTANT NOTES
-================================================================
-
-- Gmail free accounts can send roughly 500 emails per day.
-  Google Workspace accounts allow up to 2,000 per day.
+- Gmail free accounts can send roughly **500 emails per day**. Google Workspace accounts can send up to **2,000 per day**.
 - Always test with 1–2 real contacts before a full send.
-- Keep a backup of your .env file somewhere safe and private.
-- This script does NOT track opens or clicks. It is a simple
-  one-way sender only.
+- **Never share your App Password or commit `.env` to Git.** Add `.env` to your `.gitignore`.
+- This script does **not** track opens or clicks. It is a simple one-way sender.
 
-================================================================# MailForge
+---
+
+<div align="center">
+
+Made for simple, personal bulk emailing. Send responsibly.
+
+</div>
